@@ -1,0 +1,85 @@
+<html>
+
+<head>
+    <title>csv calculator</title>
+</head>
+
+<body>
+    <label for="surface">Oppervlakte (m2)</label>
+    <input type="number" id="surface" value="0" oninput="calculate()"/>
+
+    <div id="pricetable" data-tab="0">
+        <ul id="pricetable__tabheaders">
+            <li><a oninput="setTab(0)">Tab 0</a></li>
+            <li><a oninput="setTab(1)">Tab 1</a></li>
+        </ul>
+        <div id="pricetable__tabbody">
+            <div class="pricetable_tab">
+                Lorem ipsum
+                Kosten voor <span data-surface></span> m2 [product] <span data-price></span>
+            </div>
+            <div class="pricetable_tab">
+                Lorem ipsum 2
+                Kosten voor <span data-surface></span> m2 [product] <span data-price></span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        var prictablejson = ''
+
+        async function getdatafromcsv() {
+            const response = await fetch("./prijslijst.csv");
+            var responsedata = await response.text();
+            csvJSON(responsedata)
+        }
+
+        function generatePriceTable(json) {
+
+        }
+        
+        // convert csv to json
+        function csvJSON(csvText) {
+            console.log(csvText)
+            let lines = [];
+            const linesArray = csvText.split('\n');
+            // for trimming and deleting extra space 
+            linesArray.forEach((e) => {
+                const row = e.replace(/[\s]+[,]+|[,]+[\s]+/g, ';').trim();
+                lines.push(row);
+            });
+            // for removing empty record
+            lines.splice(lines.length - 1, 1);
+            const result = [];
+            const headers = lines[0].split(";");
+
+            for (let i = 1; i < lines.length; i++) {
+
+                const obj = {};
+                const currentline = lines[i].split(";");
+
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = currentline[j];
+                }
+                result.push(obj);
+            }
+            //return result; //JavaScript object
+            // return JSON.stringify(result); //JSON
+            console.log(JSON.stringify(result))
+            prictablejson = JSON.stringify(result);
+
+            generatePriceTable(prictablejson)
+            //return result;
+        }
+
+        getdatafromcsv();
+
+
+    </script>
+</body>
+
+</html>
