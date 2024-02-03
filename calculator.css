@@ -1,0 +1,19 @@
+#pricetable { 
+    .pricetable_tab {
+        display: none;
+    }
+    &[data-tab='1'] .pricetable_tab:nth-child(1),
+    &[data-tab='2'] .pricetable_tab:nth-child(2),
+    &[data-tab='3'] .pricetable_tab:nth-child(3),
+    &[data-tab='4'] .pricetable_tab:nth-child(4),
+    &[data-tab='5'] .pricetable_tab:nth-child(5),
+    &[data-tab='6'] .pricetable_tab:nth-child(6),
+    &[data-tab='7'] .pricetable_tab:nth-child(7),
+    &[data-tab='8'] .pricetable_tab:nth-child(8),
+    &[data-tab='9'] .pricetable_tab:nth-child(9),
+    &[data-tab='10'] .pricetable_tab:nth-child(10),
+    &[data-tab='11'] .pricetable_tab:nth-child(11),
+    &[data-tab='12'] .pricetable_tab:nth-child(12){
+        display: block;
+    }
+}

@@ -2,48 +2,122 @@
 
 <head>
     <title>csv calculator</title>
+    <link href="./calculator.css" rel="stylesheet" />
 </head>
 
 <body>
     <label for="surface">Oppervlakte (m2)</label>
-    <input type="number" id="surface" value="0" oninput="calculate()"/>
+    <input type="number" id="surface" value="0" oninput="calculate(this.value)"/>
 
-    <div id="pricetable" data-tab="0">
+    <div id="pricetable" data-tab="1">
         <ul id="pricetable__tabheaders">
-            <li><a oninput="setTab(0)">Tab 0</a></li>
-            <li><a oninput="setTab(1)">Tab 1</a></li>
+            <li><a onclick="setTab(1)">Tab 0</a></li>
+            <li><a onclick="setTab(2)">Tab 1</a></li>
         </ul>
         <div id="pricetable__tabbody">
-            <div class="pricetable_tab">
+            <!-- <div class="pricetable_tab">
                 Lorem ipsum
                 Kosten voor <span data-surface></span> m2 [product] <span data-price></span>
             </div>
             <div class="pricetable_tab">
                 Lorem ipsum 2
                 Kosten voor <span data-surface></span> m2 [product] <span data-price></span>
-            </div>
+            </div> -->
 
         </div>
 
     </div>
 
+    <template id="template_pricetable_tab">
+        <div class="pricetable_tab">            
+            Kosten voor <span></span> m2 <h2></h2> <output></output>
+        </div>
+    </template>
+
 
     <script>
 
         var prictablejson = ''
+        var activeTab = 0;
+        var surface = 120;
+        var jsonData = {}
 
         async function getdatafromcsv() {
             const response = await fetch("./prijslijst.csv");
             var responsedata = await response.text();
-            csvJSON(responsedata)
+            csvJSON(responsedata);
         }
 
-        function generatePriceTable(json) {
+        function generatePriceTable() {
+            console.log(surface,jsonData)
+            var json = jsonData
+            console.log(json);
+
+            console.log(json[0].product);
+            var allClones = '' 
+
+            for(i =0; i < json.length; i++){
+
+                var clone = template_pricetable_tab.content.cloneNode(true);
+
+                console.log(clone)
+
+                let h2 = clone.querySelectorAll("h2")[0];
+
+                let span = clone.querySelectorAll("span")[0];
+                let output = clone.querySelectorAll("output")[0];
+
+                    h2.textContent = json[i].product;
+                    
+                
+                var priceRangesDesc = Object.keys(json[0]).map(key => parseInt(key)).filter(Number.isInteger).sort(function(a, b){return b - a});
+
+                var selectedPriceRange = 0;
+
+                for(s =0; i <= priceRangesDesc.length; s++){
+                    if(surface >= priceRangesDesc[s]){
+                        selectedPriceRange = priceRangesDesc[s];
+                        break;
+                    }
+                }
+                var selectedPrice = json[i][selectedPriceRange.toString()]
+                console.log(selectedPriceRange,selectedPrice,surface)
+                
+                span.textContent =  surface;
+                if (selectedPrice.isInteger){
+                    output.textContent = ((selectedPrice * surface)/100).toLocaleString("nl-NL", { style: "currency", currency: "EUR" });
+                }
+                else {
+                    output.textContent = selectedPrice
+                }
+
+                
+
+                // let summary = clone.querySelectorAll("span")[0];
+                // let small = clone.querySelectorAll("small")[0];
+                // let explanation = clone.querySelectorAll(".explanation")[0];
+
+                document.getElementById('pricetable__tabbody').innerHTML = '';
+
+    
+                //document.getElementById('pricetable__tabbody').appendChild(clone);
+                allClones+=clone;
+                console.log(allClones)
+            }
+            document.getElementById('pricetable__tabbody').appendChild(allClones);
+
+            
+        }
+
+        function setTab(tab) {
+            document.getElementById('pricetable').setAttribute('data-tab', tab);            
+            
 
         }
         
         // convert csv to json
         function csvJSON(csvText) {
+            
             console.log(csvText)
             let lines = [];
             const linesArray = csvText.split('\n');
@@ -69,11 +143,23 @@
             }
             //return result; //JavaScript object
             // return JSON.stringify(result); //JSON
-            console.log(JSON.stringify(result))
+            console.log(JSON.stringify(result).length,result.length)
             prictablejson = JSON.stringify(result);
 
-            generatePriceTable(prictablejson)
+            jsonData = result;
+
+
+
+            generatePriceTable();
+
+            
             //return result;
+        }
+
+        function calculate(value) {
+            surface = value;
+            generatePriceTable()
+
         }
 
         getdatafromcsv();
