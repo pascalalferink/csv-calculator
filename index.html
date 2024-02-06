@@ -7,30 +7,24 @@
 
 <body>
     <label for="surface">Oppervlakte (m2)</label>
-    <input type="number" id="surface" value="0" oninput="calculate(this.value)"/>
+    <input type="number" id="surface" value="0" oninput="calculate(this.value)" />
 
     <div id="pricetable" data-tab="1">
         <ul id="pricetable__tabheaders">
-            <li><a onclick="setTab(1)">Tab 0</a></li>
-            <li><a onclick="setTab(2)">Tab 1</a></li>
         </ul>
         <div id="pricetable__tabbody">
-            <!-- <div class="pricetable_tab">
-                Lorem ipsum
-                Kosten voor <span data-surface></span> m2 [product] <span data-price></span>
-            </div>
-            <div class="pricetable_tab">
-                Lorem ipsum 2
-                Kosten voor <span data-surface></span> m2 [product] <span data-price></span>
-            </div> -->
 
         </div>
 
     </div>
 
-    <template id="template_pricetable_tab">
-        <div class="pricetable_tab">            
-            Kosten voor <span></span> m2 <h2></h2> <output></output>
+    <template id="template_pricetable_tabheader">
+        <li><a onclick="setTab(1)">Tab 0</a></li>
+    </template>
+
+    <template id="template_pricetable_tabbody">
+        <div class="pricetable_tab">
+            Kosten voor <span></span> m2 <span></span> <output></output>
         </div>
     </template>
 
@@ -39,7 +33,7 @@
 
         var prictablejson = ''
         var activeTab = 0;
-        var surface = 120;
+        var surface = 0;
         var jsonData = {}
 
         async function getdatafromcsv() {
@@ -48,76 +42,77 @@
             csvJSON(responsedata);
         }
 
-        function generatePriceTable() {
-            console.log(surface,jsonData)
-            var json = jsonData
-            console.log(json);
+        function generateTabHeaders(jsonItem,i) {
+            var tabheaderClone = template_pricetable_tabheader.content.cloneNode(true);
+            let tabheaderHyperlink = tabheaderClone.querySelectorAll("a")[0];
+            tabheaderHyperlink.textContent = jsonItem.product;
+            tabheaderHyperlink.setAttribute('onclick', 'setTab("' + (i + 1) + '")');
 
-            console.log(json[0].product);
-            var allClones = '' 
+            document.getElementById('pricetable__tabheaders').appendChild(tabheaderClone);
+        }
 
-            for(i =0; i < json.length; i++){
+        function generateTabBody(jsonData,i){
+            var tabbodyClone = template_pricetable_tabbody.content.cloneNode(true);
 
-                var clone = template_pricetable_tab.content.cloneNode(true);
+                let productNameSpan = tabbodyClone.querySelectorAll("span")[1];
+                productNameSpan.textContent = jsonData[i].product;
 
-                console.log(clone)
+                let surfaceSpan = tabbodyClone.querySelectorAll("span")[0];
+                let output = tabbodyClone.querySelectorAll("output")[0];
 
-                let h2 = clone.querySelectorAll("h2")[0];
 
-                let span = clone.querySelectorAll("span")[0];
-                let output = clone.querySelectorAll("output")[0];
+                var priceRangesDesc = Object.keys(jsonData[0]).map(key => parseInt(key)).filter(Number.isInteger).sort(function (a, b) { return b - a });
 
-                    h2.textContent = json[i].product;
-                    
-                
-                var priceRangesDesc = Object.keys(json[0]).map(key => parseInt(key)).filter(Number.isInteger).sort(function(a, b){return b - a});
+                //console.log(priceRangesDesc)
 
                 var selectedPriceRange = 0;
 
-                for(s =0; i <= priceRangesDesc.length; s++){
-                    if(surface >= priceRangesDesc[s]){
+                for (s = 0; s <= priceRangesDesc.length; s++) {
+                    if (surface >= priceRangesDesc[s]) {
                         selectedPriceRange = priceRangesDesc[s];
                         break;
                     }
                 }
-                var selectedPrice = json[i][selectedPriceRange.toString()]
-                console.log(selectedPriceRange,selectedPrice,surface)
-                
-                span.textContent =  surface;
-                if (selectedPrice.isInteger){
-                    output.textContent = ((selectedPrice * surface)/100).toLocaleString("nl-NL", { style: "currency", currency: "EUR" });
+                var selectedPrice = jsonData[i][selectedPriceRange.toString()]
+
+                surfaceSpan.textContent = surface;
+
+                if (selectedPrice !== 'op regie') {
+                    output.textContent = ((selectedPrice * surface) / 100).toLocaleString("nl-NL", { style: "currency", currency: "EUR" });
                 }
                 else {
                     output.textContent = selectedPrice
                 }
 
+
+                document.getElementById('pricetable__tabbody').appendChild(tabbodyClone);
+
+        }
+
+        function generatePriceTable() {
+            var json = jsonData
+
+            document.getElementById('pricetable__tabbody').innerHTML = '';
+            document.getElementById('pricetable__tabheaders').innerHTML = '';
+
+            for (i = 0; i < json.length; i++) {
+
+                generateTabHeaders(json[i],i)
+                generateTabBody(json,i)
                 
-
-                // let summary = clone.querySelectorAll("span")[0];
-                // let small = clone.querySelectorAll("small")[0];
-                // let explanation = clone.querySelectorAll(".explanation")[0];
-
-                document.getElementById('pricetable__tabbody').innerHTML = '';
-
-    
-                //document.getElementById('pricetable__tabbody').appendChild(clone);
-                allClones+=clone;
-                console.log(allClones)
             }
-            document.getElementById('pricetable__tabbody').appendChild(allClones);
 
-            
         }
 
         function setTab(tab) {
-            document.getElementById('pricetable').setAttribute('data-tab', tab);            
-            
+            document.getElementById('pricetable').setAttribute('data-tab', tab);
+
 
         }
-        
+
         // convert csv to json
         function csvJSON(csvText) {
-            
+
             console.log(csvText)
             let lines = [];
             const linesArray = csvText.split('\n');
@@ -143,7 +138,7 @@
             }
             //return result; //JavaScript object
             // return JSON.stringify(result); //JSON
-            console.log(JSON.stringify(result).length,result.length)
+            console.log(JSON.stringify(result).length, result.length)
             prictablejson = JSON.stringify(result);
 
             jsonData = result;
@@ -152,7 +147,7 @@
 
             generatePriceTable();
 
-            
+
             //return result;
         }
 
